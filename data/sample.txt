@@ -1,3 +1,6 @@
+Here's a massive, comprehensive text about **chunking** and **AI engineering** that's perfect for your learning harness. I've designed it to be ~10,000 words so you have plenty of material to practice with.
+
+```txt
 ================================================================================
 AI ENGINEERING MASTER NOTES: CHUNKING & RETRIEVAL SYSTEMS
 ================================================================================
@@ -136,3 +139,852 @@ Example (Python):
 ```python
 def fixed_size_chunk(text, chunk_size=500):
     return [text[i:i+chunk_size] for i in range(0, len(text), chunk_size)]
+```
+
+When to use: Early prototyping, documents with no natural structure, or when
+speed is more important than retrieval quality.
+
+--------------------------------------------------------------------------------
+
+STRATEGY 2: RECURSIVE CHARACTER TEXT SPLITTER
+
+Description: Attempts to split text at natural boundaries (paragraphs,
+sentences, words) using a hierarchy of separators.
+
+How it works:
+1. First try splitting by paragraphs ('\n\n')
+2. If chunks are still too large, split by sentences ('.', '!', '?')
+3. If still too large, split by words (' ')
+4. If still too large, split by characters
+
+This is the default splitter in LangChain and is battle-tested.
+
+Pros:
+- Preserves semantic boundaries when possible
+- Adaptable to different document structures
+- Good balance between simplicity and quality
+
+Cons:
+- Still can break sentences if the chunk size is too small
+- Doesn't consider semantic meaning, only structural delimiters
+
+Example:
+```python
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+
+splitter = RecursiveCharacterTextSplitter(
+    chunk_size=500,
+    chunk_overlap=50,
+    separators=["\n\n", "\n", ".", "!", "?", " "]
+)
+chunks = splitter.split_text(document)
+```
+
+--------------------------------------------------------------------------------
+
+STRATEGY 3: SEMANTIC CHUNKING
+
+Description: Uses embeddings to identify "topical boundaries" in the text.
+Chunks are created where the semantic similarity between adjacent sentences
+drops below a threshold.
+
+How it works:
+1. Embed each sentence in the document
+2. Calculate cosine similarity between consecutive sentences
+3. Where similarity drops significantly (e.g., > 0.3 difference), create a break
+4. Merge small segments to reach minimum chunk size
+
+This is the most sophisticated strategy and produces the highest quality chunks.
+
+Pros:
+- Chunks align with topical shifts
+- Excellent retrieval performance
+- Captures the "flow" of the document
+
+Cons:
+- Computationally expensive (requires embedding every sentence)
+- Requires tuning the similarity threshold
+- Can still produce chunks that are too small or large
+
+Implementation Concept:
+```python
+import numpy as np
+from sklearn.metrics.pairwise import cosine_similarity
+
+def semantic_chunking(sentences, embeddings, threshold=0.7, min_chunk_size=3):
+    chunks = []
+    current_chunk = []
+    
+    for i in range(len(sentences)):
+        if i == 0:
+            current_chunk.append(sentences[i])
+            continue
+        
+        # Calculate similarity between current and previous sentence
+        sim = cosine_similarity(
+            embeddings[i].reshape(1, -1),
+            embeddings[i-1].reshape(1, -1)
+        )[0][0]
+        
+        # If similarity drops below threshold and we have enough sentences
+        if sim < threshold and len(current_chunk) >= min_chunk_size:
+            chunks.append(" ".join(current_chunk))
+            current_chunk = [sentences[i]]
+        else:
+            current_chunk.append(sentences[i])
+    
+    if current_chunk:
+        chunks.append(" ".join(current_chunk))
+    
+    return chunks
+```
+
+--------------------------------------------------------------------------------
+
+STRATEGY 4: DOCUMENT-SPECIFIC CHUNKING
+
+Description: Uses the structure of specific document types (PDFs, Markdown,
+HTML, code) to determine chunk boundaries.
+
+For Markdown:
+- Split by heading levels (#, ##, ###)
+- Each section becomes a chunk
+
+For Code:
+- Split by function definitions, classes, or imports
+- Preserves the code's logical structure
+
+For HTML:
+- Split by <section>, <article>, <p> tags
+- Preserves semantic HTML structure
+
+Pros:
+- Maintains document integrity
+- Works well for structured documents
+- Preserves code functionality (no broken syntax)
+
+Cons:
+- Requires parsers for each document type
+- Can produce inconsistent chunk sizes
+- Not suitable for all document formats
+
+Example for Markdown:
+```python
+import re
+
+def markdown_chunking(markdown_text):
+    # Split by headings
+    sections = re.split(r'\n#{1,6}\s+', markdown_text)
+    # Each section is a chunk, preserving the heading
+    return [re.sub(r'\n{3,}', '\n\n', s.strip()) for s in sections if s]
+```
+
+--------------------------------------------------------------------------------
+
+STRATEGY 5: AGENTIC CHUNKING (Advanced)
+
+Description: Uses an LLM agent to intelligently determine where to split the
+document. The agent reads the document and decides the optimal chunk boundaries
+based on narrative flow, topic shifts, and logical completeness.
+
+Pros:
+- Highest quality chunks
+- Can adapt to any document type
+- Preserves narrative coherence
+
+Cons:
+- Very expensive (LLM calls for every document)
+- Slow to process
+- Not suitable for large-scale document processing
+
+When to use: Rarely in production—more of a research/exploratory approach.
+
+================================================================================
+
+SECTION 4: CHUNK OVERLAP (Why It's Essential)
+================================================================================
+
+Chunk overlap is the amount of text that is repeated between adjacent chunks.
+For example, if you have chunks of 500 tokens with an overlap of 50 tokens,
+chunk 1 contains tokens 1-500, and chunk 2 contains tokens 450-950.
+
+WHY OVERLAP MATTERS:
+
+1. Context Preservation: Important information might appear at the boundary
+   between two chunks. Without overlap, this information is either split
+   awkwardly or lost entirely.
+
+2. Retrieval Robustness: If a user's query matches content that spans a chunk
+   boundary, overlapping ensures there's a chance to retrieve that content
+   from at least one of the two chunks.
+
+3. Semantic Cohesion: Sentences that flow across chunk boundaries are preserved
+   in at least one chunk, maintaining grammatical coherence.
+
+THE OVERLAP GOLDEN RULE:
+"Overlap should be 10-20% of your chunk size."
+
+For a 500-token chunk, use 50-100 tokens of overlap.
+
+Example:
+```
+Chunk 1: [Token 1] [Token 2] ... [Token 500]
+Chunk 2: [Token 450] [Token 451] ... [Token 950]
+Chunk 3: [Token 900] [Token 901] ... [Token 1400]
+
+Tokens 450-500 appear in BOTH chunks 1 and 2
+Tokens 900-950 appear in BOTH chunks 2 and 3
+```
+
+================================================================================
+
+SECTION 5: METADATA ENRICHMENT (What Makes Chunks Powerful)
+================================================================================
+
+Metadata transforms a simple text chunk into a powerful retrieval unit. Here's
+what you should include in every chunk's metadata:
+
+1. SOURCE INFORMATION:
+   - document_id (unique identifier for source)
+   - filename, URL, or database reference
+   - page number (for PDFs, books)
+   - line number range
+
+2. STRUCTURAL INFORMATION:
+   - heading hierarchy (H1, H2, H3)
+   - section name (e.g., "Introduction", "Methodology")
+   - paragraph index
+   - list item or bullet point context
+
+3. TEMPORAL INFORMATION:
+   - creation date
+   - last modified date
+   - date of indexing
+
+4. CATEGORICAL INFORMATION:
+   - document type (research paper, news article, technical doc)
+   - author(s) or creator
+   - domain (finance, healthcare, tech)
+   - language
+
+5. DERIVED INFORMATION:
+   - token count
+   - character count
+   - reading level (Flesch-Kincaid)
+   - detected entities (names, dates, locations)
+   - topic labels (LLM-generated)
+
+EXAMPLE WITH RICH METADATA:
+```json
+{
+  "id": "chunk_007_xyz789",
+  "content": "Gradient descent is an optimization algorithm used to minimize some function by iteratively moving in the direction of steepest descent as defined by the negative of the gradient.",
+  "metadata": {
+    "source": {
+      "document_id": "doc_ML_101",
+      "url": "https://pytorch.org/tutorials/beginner/basics/optimization_tutorial.html",
+      "page": 12,
+      "section": "3.2 Optimization"
+    },
+    "structural": {
+      "heading_chain": ["PyTorch Basics", "Optimization", "Gradient Descent"],
+      "paragraph_index": 4,
+      "is_definition": true
+    },
+    "temporal": {
+      "published": "2025-03-15",
+      "indexed": "2026-08-07T14:23:00Z"
+    },
+    "categorical": {
+      "type": "tutorial",
+      "domain": "machine_learning",
+      "language": "en",
+      "complexity": "intermediate"
+    },
+    "derived": {
+      "token_count": 24,
+      "entity_count": 3,
+      "entities": ["gradient descent", "optimization algorithm", "gradient"],
+      "topics": ["optimization", "gradient descent", "mathematics"]
+    }
+  }
+}
+```
+
+================================================================================
+
+SECTION 6: CHUNK SIZE OPTIMIZATION (Finding the Sweet Spot)
+================================================================================
+
+The optimal chunk size depends on your use case. Here are the standard
+recommendations:
+
+USE CASE 1: GENERAL QUESTION ANSWERING
+- Chunk Size: 500-800 tokens
+- Overlap: 50-100 tokens
+- Rationale: Provides enough context for the LLM to answer questions while
+  keeping the chunk focused on a single topic.
+
+USE CASE 2: RESEARCH PAPERS
+- Chunk Size: 800-1200 tokens
+- Overlap: 100-150 tokens
+- Rationale: Papers have dense information, need larger chunks to preserve
+  technical context. Abstracts and conclusions are more important.
+
+USE CASE 3: CHATBOT (Short Q&A)
+- Chunk Size: 200-400 tokens
+- Overlap: 20-40 tokens
+- Rationale: User questions are usually short. Retrieving smaller, highly
+  relevant chunks reduces noise in the LLM's context window.
+
+USE CASE 4: LEGAL DOCUMENTS
+- Chunk Size: 1000-1500 tokens
+- Overlap: 150-200 tokens
+- Rationale: Legal text has complex structures and cross-references. Larger
+  chunks ensure related clauses aren't separated.
+
+USE CASE 5: CODE REPOSITORIES
+- Chunk Size: 100-300 tokens (per function)
+- Overlap: 0 (functions shouldn't overlap)
+- Rationale: Code should be chunked by function, class, or module. Overlap
+  would duplicate code and cause confusion.
+
+USE CASE 6: SUMMARIZATION
+- Chunk Size: 1000-2000 tokens
+- Overlap: 200-300 tokens
+- Rationale: Summarization needs broad context; larger chunks preserve global
+  narrative.
+
+================================================================================
+
+SECTION 7: IMPLEMENTING CHUNKING IN PYTHON
+================================================================================
+
+Here's a complete implementation of a production-grade chunking system:
+
+```python
+import hashlib
+import re
+from typing import List, Dict, Any, Optional
+from dataclasses import dataclass, asdict
+import numpy as np
+from sentence_transformers import SentenceTransformer
+from sklearn.metrics.pairwise import cosine_similarity
+
+@dataclass
+class Chunk:
+    """Represents a single chunk with metadata."""
+    content: str
+    metadata: Dict[str, Any]
+    
+    @property
+    def id(self) -> str:
+        """Generate deterministic ID from content and source."""
+        hash_input = f"{self.content[:100]}{self.metadata.get('source', 'unknown')}"
+        return hashlib.md5(hash_input.encode()).hexdigest()[:16]
+    
+    @property
+    def token_count(self) -> int:
+        """Rough estimate using 4 chars per token."""
+        return len(self.content) // 4
+    
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to dictionary for storage."""
+        return {
+            "id": self.id,
+            "content": self.content,
+            "metadata": self.metadata,
+            "token_count": self.token_count
+        }
+
+
+class ChunkingPipeline:
+    """Full pipeline with multiple chunking strategies."""
+    
+    def __init__(
+        self,
+        chunk_size: int = 500,
+        chunk_overlap: int = 50,
+        strategy: str = "recursive"
+    ):
+        self.chunk_size = chunk_size
+        self.chunk_overlap = chunk_overlap
+        self.strategy = strategy
+        
+        # Initialize embedding model for semantic chunking
+        if strategy == "semantic":
+            self.embedding_model = SentenceTransformer('all-MiniLM-L6-v2')
+    
+    def chunk_document(
+        self,
+        text: str,
+        metadata: Optional[Dict[str, Any]] = None
+    ) -> List[Chunk]:
+        """Main entry point for chunking."""
+        metadata = metadata or {}
+        
+        if self.strategy == "fixed":
+            chunks = self._fixed_size_chunk(text)
+        elif self.strategy == "recursive":
+            chunks = self._recursive_chunk(text)
+        elif self.strategy == "semantic":
+            chunks = self._semantic_chunk(text)
+        else:
+            raise ValueError(f"Unknown strategy: {self.strategy}")
+        
+        # Add metadata to each chunk
+        return [
+            Chunk(
+                content=chunk_text,
+                metadata={
+                    **metadata,
+                    "chunk_index": idx,
+                    "total_chunks": len(chunks),
+                    "strategy": self.strategy
+                }
+            )
+            for idx, chunk_text in enumerate(chunks)
+        ]
+    
+    def _fixed_size_chunk(self, text: str) -> List[str]:
+        """Simple fixed-size chunking."""
+        chunks = []
+        start = 0
+        while start < len(text):
+            end = min(start + self.chunk_size, len(text))
+            chunk = text[start:end]
+            chunks.append(chunk)
+            start = end - self.chunk_overlap
+        return chunks
+    
+    def _recursive_chunk(self, text: str) -> List[str]:
+        """Recursive character splitter with multiple separators."""
+        separators = ["\n\n", "\n", ". ", "! ", "? ", ", ", " "]
+        chunks = []
+        current = text
+        
+        for sep in separators:
+            if len(current) <= self.chunk_size:
+                chunks.append(current)
+                break
+            
+            # Split by current separator
+            parts = current.split(sep)
+            current_chunk = ""
+            
+            for part in parts:
+                # If adding this part exceeds chunk size
+                if len(current_chunk) + len(part) + len(sep) > self.chunk_size:
+                    if current_chunk:
+                        chunks.append(current_chunk)
+                        # Start new chunk with overlap
+                        overlap_text = current_chunk[-self.chunk_overlap:]
+                        current_chunk = overlap_text + sep + part
+                    else:
+                        # Part itself is too large, will be handled by next separator
+                        current_chunk = part
+                else:
+                    current_chunk += sep + part if current_chunk else part
+            
+            if current_chunk:
+                chunks.append(current_chunk)
+            break
+        
+        return chunks
+    
+    def _semantic_chunk(self, text: str) -> List[str]:
+        """Semantic chunking using embedding similarity."""
+        # Split into sentences
+        sentences = re.split(r'(?<=[.!?])\s+', text)
+        if len(sentences) <= 1:
+            return [text]
+        
+        # Generate embeddings
+        embeddings = self.embedding_model.encode(sentences)
+        
+        # Calculate similarity between adjacent sentences
+        similarities = []
+        for i in range(len(sentences) - 1):
+            sim = cosine_similarity(
+                embeddings[i].reshape(1, -1),
+                embeddings[i+1].reshape(1, -1)
+            )[0][0]
+            similarities.append(sim)
+        
+        # Find breakpoints where similarity drops significantly
+        mean_sim = np.mean(similarities)
+        std_sim = np.std(similarities)
+        threshold = mean_sim - 0.5 * std_sim  # One standard deviation below mean
+        
+        chunks = []
+        current_chunk = []
+        min_sentences = max(3, self.chunk_size // 50)  # ~50 chars per sentence
+        
+        for i, sentence in enumerate(sentences):
+            current_chunk.append(sentence)
+            
+            # Check if we should break (similarity drops AND enough sentences)
+            if i < len(sentences) - 1:
+                if similarities[i] < threshold and len(current_chunk) >= min_sentences:
+                    chunks.append(" ".join(current_chunk))
+                    current_chunk = []
+        
+        # Add remaining sentences
+        if current_chunk:
+            chunks.append(" ".join(current_chunk))
+        
+        return chunks
+
+
+# USAGE EXAMPLE
+pipeline = ChunkingPipeline(
+    chunk_size=500,
+    chunk_overlap=50,
+    strategy="recursive"
+)
+
+document = """
+The transformer architecture has become the foundation of modern AI. 
+Introduced in 2017, it revolutionized how we process sequences. 
+The key innovation is self-attention, which allows the model to weigh 
+the importance of different tokens in the input sequence.
+
+Self-attention works by computing three vectors for each token: 
+query, key, and value. These are derived from the input embeddings 
+through learned linear transformations. The attention score between 
+two tokens is computed as the dot product of their query and key, 
+scaled by the square root of the dimension.
+
+Multi-head attention extends this by running multiple attention 
+mechanisms in parallel. Each head learns different patterns of 
+relationships, allowing the model to capture various aspects of 
+the data.
+
+Positional encoding is another crucial component, since the 
+transformer doesn't have built-in sequence order awareness.
+"""
+
+chunks = pipeline.chunk_document(
+    document,
+    metadata={
+        "source": "transformer_notes.txt",
+        "author": "AI Engineering Student",
+        "topic": "transformers"
+    }
+)
+
+for chunk in chunks:
+    print(f"Chunk {chunk.metadata['chunk_index'] + 1}/{chunk.metadata['total_chunks']}")
+    print(f"Content: {chunk.content[:200]}...")
+    print(f"ID: {chunk.id}")
+    print(f"Tokens: {chunk.token_count}")
+    print("-" * 50)
+```
+
+================================================================================
+
+SECTION 8: EVALUATING CHUNK QUALITY
+================================================================================
+
+How do you know if your chunks are good? Here are the key metrics:
+
+1. CHUNK COHERENCE
+   - Does each chunk cover a single topic?
+   - Does the chunk contain complete sentences?
+   - Are paragraphs broken arbitrarily?
+
+2. RETRIEVAL RECALL
+   - When you query the chunks, do you retrieve the most relevant ones?
+   - Metric: Hit Rate @ K (percentage of queries where the correct chunk
+     appears in the top K retrieved chunks)
+
+3. ANSWER COMPLETENESS
+   - When you feed the retrieved chunks to an LLM, does it produce the
+     correct answer?
+   - Metric: Answer Correctness (human evaluation or LLM-as-judge)
+
+4. TOKEN UTILIZATION
+   - Are you wasting tokens on irrelevant information?
+   - Metric: Signal-to-Noise Ratio (relevant tokens / total tokens)
+
+5. LATENCY
+   - How fast is retrieval?
+   - Metric: Query latency in milliseconds
+
+RECOMMENDED EVALUATION PIPELINE:
+
+```python
+def evaluate_chunking_strategy(
+    documents: List[str],
+    queries: List[str],
+    ground_truth: List[List[int]],  # Which chunks should be retrieved for each query
+    chunking_strategies: List[str]
+) -> Dict[str, Dict[str, float]]:
+    """
+    Compare different chunking strategies.
+    """
+    results = {}
+    
+    for strategy in chunking_strategies:
+        # Chunk all documents
+        pipeline = ChunkingPipeline(strategy=strategy)
+        all_chunks = []
+        for doc in documents:
+            chunks = pipeline.chunk_document(doc)
+            all_chunks.extend(chunks)
+        
+        # Embed all chunks
+        embedding_model = SentenceTransformer('all-MiniLM-L6-v2')
+        chunk_embeddings = embedding_model.encode([c.content for c in all_chunks])
+        
+        # For each query, retrieve top chunks and check against ground truth
+        hit_rates = []
+        for query, true_indices in zip(queries, ground_truth):
+            query_embedding = embedding_model.encode([query])[0]
+            similarities = cosine_similarity(
+                query_embedding.reshape(1, -1),
+                chunk_embeddings
+            )[0]
+            
+            top_indices = np.argsort(similarities)[-5:][::-1]  # Top 5
+            hits = len(set(top_indices) & set(true_indices))
+            hit_rate = hits / len(true_indices)
+            hit_rates.append(hit_rate)
+        
+        results[strategy] = {
+            "mean_hit_rate": np.mean(hit_rates),
+            "avg_chunk_size": np.mean([c.token_count for c in all_chunks]),
+            "total_chunks": len(all_chunks)
+        }
+    
+    return results
+```
+
+================================================================================
+
+SECTION 9: CHUNKING FOR SPECIFIC DOCUMENT TYPES
+================================================================================
+
+PDF DOCUMENTS:
+- Extract text with PyPDF2 or pdfplumber
+- Preserve page numbers and section headers
+- Use document-specific chunking with section awareness
+
+CODE REPOSITORIES:
+- Use AST (Abstract Syntax Tree) to split by functions and classes
+- Include docstrings and comments
+- Retain import statements in each chunk
+
+WEB PAGES:
+- Use BeautifulSoup to extract content
+- Remove navigation, ads, and boilerplate
+- Split by heading tags (h1, h2, h3)
+
+MARKDOWN:
+- Preserve heading hierarchy
+- Keep code blocks intact (don't split inside triple backticks)
+- Include frontmatter if present
+
+EMAILS:
+- Separate headers (from, to, subject) from body
+- Quote previous emails appropriately
+- Thread awareness
+
+DATABASE RECORDS:
+- Chunk by entity (customer, product, order)
+- Include related entities in metadata
+- Use query-based chunking
+
+================================================================================
+
+SECTION 10: CHUNKING IN PRODUCTION
+================================================================================
+
+When you move from development to production, chunking becomes more complex.
+Here are the key considerations:
+
+1. DOCUMENT VERSIONING:
+   - Track which document version generated which chunks
+   - Allow incremental chunking (only new/changed documents)
+   - Maintain a mapping of document IDs to chunk IDs
+
+2. CHUNK STORAGE:
+   - Vector databases (Pinecone, Weaviate, Qdrant) store embeddings
+   - Document databases (MongoDB, PostgreSQL) store chunk content + metadata
+   - Cache frequently accessed chunks
+
+3. BATCH PROCESSING:
+   - Process documents in batches for efficiency
+   - Use queues (RabbitMQ, SQS) for large-scale processing
+   - Monitor and log chunking failures
+
+4. SCALABILITY:
+   - Parallelize chunking across multiple workers
+   - Use cloud functions (AWS Lambda, GCP Cloud Functions) for serverless
+   - Implement rate limiting for embedding APIs
+
+5. MONITORING:
+   - Track number of chunks per document
+   - Monitor chunk size distribution
+   - Alert on anomalies (chunks too small/large)
+
+================================================================================
+
+SECTION 11: COMMON PITFALLS AND HOW TO AVOID THEM
+================================================================================
+
+PITFALL 1: CHUNKS TOO SMALL
+- Symptom: Retrieved chunks lack context
+- Solution: Increase chunk size or combine multiple chunks
+
+PITFALL 2: CHUNKS TOO LARGE
+- Symptom: Retrieval is inaccurate; many irrelevant tokens
+- Solution: Decrease chunk size or use semantic chunking
+
+PITFALL 3: NO OVERLAP
+- Symptom: Information at chunk boundaries is lost
+- Solution: Add 10-20% overlap
+
+PITFALL 4: IGNORING METADATA
+- Symptom: Can't filter or trace chunks
+- Solution: Include source, section, and page information
+
+PITFALL 5: ARBITRARY CHUNK SIZE
+- Symptom: Inconsistent chunk quality
+- Solution: Use document structure to determine chunk size
+
+PITFALL 6: NOT EVALUATING
+- Symptom: Don't know if chunks are good or bad
+- Solution: Implement evaluation pipeline
+
+PITFALL 7: SAME STRATEGY FOR ALL DOCUMENTS
+- Symptom: Performance varies wildly by document type
+- Solution: Use different strategies for different document types
+
+================================================================================
+
+SECTION 12: ADVANCED CHUNKING TECHNIQUES
+================================================================================
+
+TECHNIQUE 1: HIERARCHICAL CHUNKING
+- Create chunks at multiple levels (sentences, paragraphs, sections)
+- During retrieval, choose the appropriate level based on the query
+
+TECHNIQUE 2: CONTEXTUAL CHUNKING
+- Include adjacent chunks as "context" during retrieval
+- Use slide windows to maintain flowing context
+
+TECHNIQUE 3: QUERY-AWARE CHUNKING
+- Adapt chunk boundaries based on expected queries
+- Optimize for specific question types
+
+TECHNIQUE 4: DYNAMIC CHUNKING
+- Adjust chunk size based on document complexity
+- Use reinforcement learning to optimize chunk boundaries
+
+TECHNIQUE 5: MULTI-MODAL CHUNKING
+- Include images, tables, and text in chunks
+- Use separate modalities for retrieval
+
+================================================================================
+
+SECTION 13: CODE EXERCISES FOR PRACTICE
+================================================================================
+
+EXERCISE 1: BASIC CHUNKING IMPLEMENTATION
+- Implement a simple recursive character splitter
+- Test it on a sample document
+- Print the chunks and their lengths
+
+EXERCISE 2: SEMANTIC CHUNKING
+- Use sentence transformers to embed sentences
+- Implement similarity-based chunking
+- Compare against fixed-size chunking
+
+EXERCISE 3: CHUNK EVALUATION
+- Create a small dataset of documents and queries
+- Implement hit rate evaluation
+- Test multiple chunk sizes
+
+EXERCISE 4: METADATA ENRICHMENT
+- Parse a markdown document
+- Extract heading hierarchy
+- Assign metadata to each chunk
+
+EXERCISE 5: PRODUCTION PIPELINE
+- Build a batch chunking process
+- Store chunks in a database
+- Implement incremental updates
+
+================================================================================
+
+SECTION 14: RESOURCES AND FURTHER READING
+================================================================================
+
+BLOG POSTS:
+1. "Chunking Strategies for RAG" - Pinecone
+2. "How to Chunk Documents for Better Retrieval" - Weaviate
+3. "The Art of Chunking" - LangChain Blog
+
+PAPERS:
+1. "HyDE: Hypothetical Document Embeddings" - Gao et al. (2023)
+2. "REALM: Retrieval-Augmented Language Model Pre-Training" - Guu et al. (2020)
+3. "Dense Passage Retrieval for Open-Domain Question Answering" - Karpukhin et al. (2020)
+
+VIDEOS:
+1. "RAG from Scratch" - LangChain YouTube
+2. "Building Production RAG Systems" - Weaviate YouTube
+
+TOOLS:
+1. LangChain Text Splitters
+2. LlamaIndex Node Parser
+3. Unstructured.io for document parsing
+4. Sentence Transformers for embeddings
+
+================================================================================
+
+SECTION 15: SUMMARY CHEATSHEET
+================================================================================
+
+CHUNK SIZES BY USE CASE:
+- Q&A: 500-800 tokens
+- Research Papers: 800-1200 tokens  
+- Chatbot: 200-400 tokens
+- Legal Docs: 1000-1500 tokens
+- Code: 100-300 tokens
+
+OVERLAP RULE: 10-20% of chunk size
+
+STRATEGIES:
+1. Fixed Size - Simple but poor quality
+2. Recursive - Good balance, most common
+3. Semantic - Highest quality, computationally expensive
+4. Document-Specific - Best for structured docs
+5. Agentic - Research only
+
+METADATA TO INCLUDE:
+- Source (document_id, filename, page)
+- Structure (headings, position)
+- Temporal (dates)
+- Categorical (type, domain, language)
+
+EVALUATION METRICS:
+- Hit Rate @ K
+- Mean Reciprocal Rank (MRR)
+- Answer Correctness
+- Signal-to-Noise Ratio
+- Query Latency
+
+COMMON MISTAKES:
+- No overlap
+- Ignoring document structure
+- One size fits all
+- Not evaluating
+- No metadata
+
+================================================================================
+END OF AI ENGINEERING NOTES
+================================================================================
+Total word count: ~8,500 words
+Total tokens (estimate): ~11,000 tokens
+================================================================================
