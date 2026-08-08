@@ -32,7 +32,7 @@ def find_relevant_chunk(question: str, chunks: list[str]) -> str:
 
     return best_chunk
 
-def ask_model(question: str, context: str, client: OpenAI) -> str:
+def ask_model(question: str, context: str, max_tokens: int, client: OpenAI) -> str:
     messages: list[ChatCompletionMessageParam] = [
             {"role": "system", "content":"Answer using only the context provided. Do not use outside knowledge"},
             {"role": "user", "content": f"Context: {context}\n\nQuestion: {question}"
@@ -42,7 +42,7 @@ def ask_model(question: str, context: str, client: OpenAI) -> str:
         response = client.chat.completions.create(
             model="nvidia/nemotron-3-ultra-550b-a55b:free",
             messages=messages,
-            max_tokens=300,
+            max_tokens=max_tokens,
             temperature=0.5
         )
     
@@ -64,13 +64,15 @@ def main():
     
     parser.add_argument("file", type=str, help="File with content to chunk")
     parser.add_argument("--overlap", type=int, default=50, help="overlap for chunks")
-    parser.add_argument("--chunk_size", type=int, default=500, help="window size")
+    parser.add_argument("--chunk-size", type=int, default=500, help="window size")
+    parser.add_argument("--max-tokens", type=int, default=300, help="maximum number of output tokens")
     
     args = parser.parse_args()
 
     file = args.file
     overlap = args.overlap
     chunk_size = args.chunk_size
+    max_tokens = args.max_tokens
 
     text = load_text(file)
     chunks = chunk_text(text, chunk_size, overlap)
@@ -82,7 +84,7 @@ def main():
 
     for question in load_questions():
         context = find_relevant_chunk(question, chunks)
-        answer = ask_model(question, context, client)
+        answer = ask_model(question, context, max_tokens, client)
 
         print(f"\n[Question]:\n {question}\n\n[Answer]:\n {answer}\n")
 
