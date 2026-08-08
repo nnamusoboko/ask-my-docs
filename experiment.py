@@ -63,8 +63,8 @@ def main():
     parser = argparse.ArgumentParser(description="Chunking quality experiment")
     
     parser.add_argument("file", type=str, help="File with content to chunk")
-    parser.add_argument("--overlap", type=int, default=2, help="overlap for chunks")
-    parser.add_argument("--chunk_size", type=int, default=4, help="window size")
+    parser.add_argument("--overlap", type=int, default=50, help="overlap for chunks")
+    parser.add_argument("--chunk_size", type=int, default=500, help="window size")
     
     args = parser.parse_args()
 
