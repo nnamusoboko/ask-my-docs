@@ -84,7 +84,7 @@ def main():
         context = find_relevant_chunk(question, chunks)
         answer = ask_model(question, context, client)
 
-        print(f"Question: {question}\n\tAnswer: {answer}")
+        print(f"\n[Question]:\n {question}\n\n[Answer]:\n {answer}\n")
 
 
 if __name__ == "__main__":
