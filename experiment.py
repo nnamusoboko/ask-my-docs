@@ -14,23 +14,29 @@ def load_questions() -> list[str]:
 
     return questions
 
-def find_relevant_chunk(question: str, chunks: list[str]) -> tuple[int, str]:
+def find_relevant_chunk(question: str, chunks: list[str]) -> tuple[int, str, dict[str, int]]:
     if not chunks:
-        return 0, "No chunks available to search."
+        return 0, "No chunks available to search.", {}
 
     question_words = question.lower().split()
     
     best_chunk = chunks[0]
     best_score = 0
+    matched_words = {}
 
     for chunk in chunks:
-        chunk_words = set(chunk.lower().split())
-        score = sum(1 for word in question_words if word in chunk_words)
+        chunk_word_list = chunk.lower().split()
+        chunk_word_set  = set(chunk_word_list)
+
+        matched = {word: chunk_word_list.count(word) for word in question_words if word in chunk_word_set}
+        score = len(matched)
+
         if score > best_score:
             best_score = score
+            matched_words = matched
             best_chunk = chunk
 
-    return best_score, best_chunk
+    return best_score, best_chunk, matched_words
 
 def ask_model(question: str, context: str, max_tokens: int, client: OpenAI) -> str:
     messages: list[ChatCompletionMessageParam] = [
@@ -83,9 +89,9 @@ def main():
     )
 
     for question in load_questions():
-        score, context = find_relevant_chunk(question, chunks)
+        score, context, matched_words = find_relevant_chunk(question, chunks)
 
-        print(f"\nBest chunk for question '{question}':\nchunk index: #{chunks.index(context)}\nBest chunk {context[:50]}... \nwith score {score}\n")
+        print(f"\nBest chunk for question '{question}':\nchunk index: #{chunks.index(context)}\nBest chunk {context[:50]}... \nmatched words: {matched_words}\nwith score {score}\n")
 
         answer = ask_model(question, context, max_tokens, client)
 
