@@ -1,33 +1,54 @@
 # Ask-my-docs
 
-A tool that lets a user ask natural-language questions and get answers grounded in a specific set of documents, instead of the model's general knowledge.
+A tool that lets a user ask natural-language questions and get answers grounded in a
+specific set of documents, instead of the model's general knowledge.
+
+> **Status:** Under active development. Expect rough edges and changing behavior.
 
 ## Getting started
 
 1. Create and activate a virtual environment:
-   python3 -m venv .venv
-   source .venv/bin/activate
 
-2. Install the dependency:
-   pip install openai
+   `python3 -m venv .venv`
+   `source .venv/bin/activate`
 
-3. Get an API key at [OpenRouter keys](https://openrouter.ai/keys) and export it:
-   export OPENROUTER_API_KEY=your_key_here
+2. Install the dependencies:
+
+   `pip install openai python-dotenv`
+
+3. Get an API key from any provider with an OpenAI-compatible API  for example
+   [DeepSeek](https://platform.deepseek.com/api_keys) or [OpenRouter](https://openrouter.ai/workspaces/default/keys). Free-tier models work too, though quality varies.
+
+4. Configure the environment:
+
+   `cp .env.example .env`
+
+   Fill in:
+
+   - `DEEPSEEK_API_KEY` — your provider's API key
+   - `DEEPSEEK_MODEL` — the model ID to use (e.g. `deepseek-chat`)
+   - `DEEPSEEK_BASE_URL` — your provider's OpenAI-compatible endpoint.
+     Leave as-is for DeepSeek; for OpenRouter use [OpenRouter](https://openrouter.ai/api/v1).
 
 ## Usage
 
 Put a text document in `data/`, then ask questions about it:
 
-**command:** `python experiment.py data/sample.txt --chunk_size 500 --overlap 50`
+`python experiment.py data/sample.txt --chunk-size 500 --overlap 50`
 
 Options:
 
-- `--chunk_size` — chunk size in characters (default 500)
-- `--overlap` — overlap between chunks in characters (default 50)
+- `--chunk-size` — chunk size in characters (default 500)
+- `--overlap`    — overlap between chunks in characters (default 50)
+- `--max-tokens` — maximum output tokens per answer (default 300)
 
-The script splits the document into overlapping chunks, finds the chunk most relevant to each question, and answers using only that chunk's text.
+The script splits the document into overlapping chunks, finds the chunk most
+relevant to each question using keyword matching, and answers using only that
+chunk's text. Questions with no matching chunk are answered locally without a
+model call.
 
 ## Files
 
 - `ingest.py` — reads a text file and splits it into overlapping chunks
-- `experiment.py` — asks questions about a document via OpenRouter
+- `experiment.py` — asks questions about a document via an OpenAI-compatible API
+  
