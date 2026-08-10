@@ -89,11 +89,11 @@ def main():
     for question in load_questions():
         score, context, matched_words = find_relevant_chunk(question, chunks)
 
-        print(f"\nBest chunk for question '{question}':\nchunk index: #{chunks.index(context)}\nBest chunk {context[:50]}... \nmatched words: {matched_words}\nwith score {score}\n")
+        print(f"\n\n[question]: \n{question}\n[Best chunk]:\n{context[:50]}...\n[chunk index]: #{chunks.index(context)}\n[matched words]: {matched_words}\n[Score]: {score}\n")
 
         answer = ask_model(question, context, max_tokens, client)
 
-        print(f"\n[Question]:\n {question}\n\n[Answer]:\n {answer}\n")
+        print(f"[Answer]:\n {answer}\n\n")
 
 
 if __name__ == "__main__":
