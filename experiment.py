@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 from openai import OpenAI
 from openai.types.chat import ChatCompletionMessageParam
 from ingest import load_text, chunk_text
+from text_utils import clean_words
 
 def load_questions() -> list[str]:
     questions = ["whats chunking?", "what is fixed-size chunking?", "what are the drawbacks of fixed-size chunking?"]
@@ -14,14 +15,14 @@ def find_relevant_chunk(question: str, chunks: list[str]) -> tuple[int, str, dic
     if not chunks:
         return 0, "", {}
 
-    question_words = [word.strip("?!.,;:()") for word in question.lower().split()]
+    question_words = clean_words(question)
     
     best_chunk = ""
     best_score = 0
     matched_words = {}
 
     for chunk in chunks:
-        chunk_word_list = chunk.lower().split()
+        chunk_word_list = clean_words(chunk)
         chunk_word_set  = set(chunk_word_list)
 
         matched = {word: chunk_word_list.count(word) for word in question_words if word in chunk_word_set}
