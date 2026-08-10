@@ -1,16 +1,12 @@
 import os
 import argparse
+from dotenv import load_dotenv
 from openai import OpenAI
 from openai.types.chat import ChatCompletionMessageParam
 from ingest import load_text, chunk_text
 
 def load_questions() -> list[str]:
-    questions = []
-    user_query = ""
-    while user_query != "q":
-        user_query = input("Ask your local document question(q--quit asking): ")
-        if user_query != "q":
-            questions.append(user_query)
+    questions = ["whats chunking?", "what is fixed-size chunking?", "what are the drawbacks of fixed-size chunking?"]
 
     return questions
 
