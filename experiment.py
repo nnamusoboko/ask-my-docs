@@ -12,11 +12,11 @@ def load_questions() -> list[str]:
 
 def find_relevant_chunk(question: str, chunks: list[str]) -> tuple[int, str, dict[str, int]]:
     if not chunks:
-        return 0, "No chunks available to search.", {}
+        return 0, "", {}
 
-    question_words = question.lower().split()
+    question_words = [word.strip("?!.,;:()") for word in question.lower().split()]
     
-    best_chunk = chunks[0]
+    best_chunk = ""
     best_score = 0
     matched_words = {}
 
@@ -31,6 +31,9 @@ def find_relevant_chunk(question: str, chunks: list[str]) -> tuple[int, str, dic
             best_score = score
             matched_words = matched
             best_chunk = chunk
+
+    if best_score == 0:
+        return 0, "", {}
 
     return best_score, best_chunk, matched_words
 
