@@ -42,7 +42,7 @@ def ask_model(question: str, context: str, max_tokens: int, client: OpenAI) -> s
     ]
     try:
         response = client.chat.completions.create(
-            model="nvidia/nemotron-3-ultra-550b-a55b:free",
+            model=os.getenv("DEEPSEEK_MODEL", "deepseek-v4-flash"),
             messages=messages,
             max_tokens=max_tokens,
             temperature=0.5
@@ -62,6 +62,8 @@ def ask_model(question: str, context: str, max_tokens: int, client: OpenAI) -> s
         return "Error while asking model."
 
 def main():
+    load_dotenv()
+
     parser = argparse.ArgumentParser(description="Chunking quality experiment")
     
     parser.add_argument("file", type=str, help="File with content to chunk")
@@ -80,8 +82,8 @@ def main():
     chunks = chunk_text(text, chunk_size, overlap)
 
     client = OpenAI(
-        base_url="https://openrouter.ai/api/v1",
-        api_key=os.getenv("OPENROUTER_API_KEY")
+        base_url="https://api.deepseek.com",
+        api_key=os.getenv("DEEPSEEK_API_KEY")
     )
 
     for question in load_questions():
