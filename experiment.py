@@ -92,9 +92,15 @@ def main():
     for question in load_questions():
         score, context, matched_words = find_relevant_chunk(question, chunks)
 
-        print(f"\n\n[question]: \n{question}\n[Best chunk]:\n{context[:50]}...\n[chunk index]: #{chunks.index(context)}\n[matched words]: {matched_words}\n[Score]: {score}\n")
+        context_preview = context[:50] + "..." if context else "No context available."
+        context_index = chunks.index(context) if context and  context in chunks else -1
 
-        answer = ask_model(question, context, max_tokens, client)
+        print(f"\n\n[question]: \n{question}\n[Best chunk]:\n{context_preview}\n[chunk index]: #{context_index}\n[matched words]: {matched_words}\n[Score]: {score}\n")
+
+        if score == 0:
+            answer = "No relevant context found for the question."
+        else:
+            answer = ask_model(question, context, max_tokens, client)
 
         print(f"[Answer]:\n {answer}\n\n")
 
