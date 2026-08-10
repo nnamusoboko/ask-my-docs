@@ -9,15 +9,18 @@ specific set of documents, instead of the model's general knowledge.
 
 1. Create and activate a virtual environment:
 
-   `python3 -m venv .venv`
-   `source .venv/bin/activate`
+   ```bash
+   python3 -m venv .venv
+   source .venv/bin/activate
+   ```
 
 2. Install the dependencies:
 
-   `pip install openai python-dotenv`
+   ```bash
+   pip install openai python-dotenv
+   ```
 
-3. Get an API key from any provider with an OpenAI-compatible API  for example
-   [DeepSeek](https://platform.deepseek.com/api_keys) or [OpenRouter](https://openrouter.ai/workspaces/default/keys). Free-tier models work too, though quality varies.
+3. Get an API key from any provider with an OpenAI-compatible API, for example [DeepSeek](https://platform.deepseek.com/api_keys) or [OpenRouter](https://openrouter.ai/workspaces/default/keys). Free-tier models work too, though quality varies.
 
 4. Configure the environment:
 
