@@ -39,7 +39,7 @@ def find_relevant_chunk(question: str, chunks: list[str]) -> tuple[int, str, dic
 
 def ask_model(question: str, context: str, max_tokens: int, client: OpenAI) -> str:
     messages: list[ChatCompletionMessageParam] = [
-            {"role": "system", "content":"Answer using only the context provided. Do not use outside knowledge"},
+            {"role": "system", "content":"Answer using only the context provided. Do not use outside knowledge. Respond in the same language as the question."},
             {"role": "user", "content": f"Context: {context}\n\nQuestion: {question}"
         }
     ]
