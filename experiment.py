@@ -1,6 +1,7 @@
 import os
 import argparse
 from dotenv import load_dotenv
+from rank_bm25 import BM25Okapi
 from openai import OpenAI
 from openai.types.chat import ChatCompletionMessageParam
 from ingest import load_text, chunk_text
@@ -11,30 +12,28 @@ def load_questions() -> list[str]:
 
     return questions
 
-def find_relevant_chunk(question: str, chunks: list[str]) -> tuple[int, str, dict[str, int]]:
+def find_relevant_chunk(question: str, chunks: list[str]) -> tuple[float, str, dict[str, int]]:
     if not chunks:
         return 0, "", {}
 
-    question_words = clean_words(question)
+    question_word_tokens = clean_words(question)
     
     best_chunk = ""
     best_score = 0
     matched_words = {}
+    
+    tokenized_chunks = [clean_words(chunk) for chunk in chunks]
 
-    for chunk in chunks:
-        chunk_word_list = clean_words(chunk)
-        chunk_word_set  = set(chunk_word_list)
+    bm25 = BM25Okapi(tokenized_chunks)
+    scores = bm25.get_scores(question_word_tokens)
 
-        matched = {word: chunk_word_list.count(word) for word in question_words if word in chunk_word_set}
-        score = len(matched)
-
-        if score > best_score:
-            best_score = score
-            matched_words = matched
-            best_chunk = chunk
+    best_score = scores.max()
 
     if best_score == 0:
         return 0, "", {}
+
+    best_chunk_index = scores.argmax()
+    best_chunk = chunks[best_chunk_index]
 
     return best_score, best_chunk, matched_words
 
