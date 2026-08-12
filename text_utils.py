@@ -1,7 +1,9 @@
 from rank_bm25 import BM25Okapi
 
 def clean_words(text: str) -> list[str]:
-    return [word.strip("?!.,;:()\"'") for word in text.lower().split()]
+    STOPWORDS = {"what", "is", "are", "of", "a", "an", "the"}
+    stripped = [word.strip("?!.,;:()\"'") for word in text.lower().split()] 
+    return [word for word in stripped if word not in STOPWORDS]
 
 def best_chunk_stats(bm25: BM25Okapi, winner_tokens: list[str], qtn_word_tokens: list[str], best_chunk_index: int) -> dict[str, float]:
     matched_words = {}
