@@ -5,14 +5,14 @@ from rank_bm25 import BM25Okapi
 from openai import OpenAI
 from openai.types.chat import ChatCompletionMessageParam
 from ingest import load_text, chunk_text
-from text_utils import clean_words
+from text_utils import clean_words, best_chunk_stats
 
 def load_questions() -> list[str]:
     questions = ["whats chunking?", "what is fixed-size chunking?", "what are the drawbacks of fixed-size chunking?"]
 
     return questions
 
-def find_relevant_chunk(question: str, chunks: list[str]) -> tuple[float, str, dict[str, int]]:
+def find_relevant_chunk(question: str, chunks: list[str]) -> tuple[float, str, dict[str, float]]:
     if not chunks:
         return 0, "", {}
 
@@ -34,6 +34,9 @@ def find_relevant_chunk(question: str, chunks: list[str]) -> tuple[float, str, d
 
     best_chunk_index = scores.argmax()
     best_chunk = chunks[best_chunk_index]
+
+    winner_tokens = tokenized_chunks[best_chunk_index]
+    matched_words = best_chunk_stats(bm25, winner_tokens, question_word_tokens, int(best_chunk_index))
 
     return best_score, best_chunk, matched_words
 
