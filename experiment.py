@@ -20,7 +20,7 @@ def main():
     parser.add_argument("file", type=str, help="File with content to chunk")
     parser.add_argument("--overlap", type=int, default=50, help="overlap for chunks")
     parser.add_argument("--chunk-size", type=int, default=500, help="window size")
-    parser.add_argument("--max-tokens", type=int, default=300, help="maximum number of output tokens")
+    parser.add_argument("--max-tokens", type=int, default=1000, help="maximum number of output tokens")
     
     args = parser.parse_args()
 
