@@ -10,7 +10,7 @@ def ask_model(question: str, context: str, max_tokens: int, client: OpenAI) -> s
     ]
     try:
         response = client.chat.completions.create(
-            model=os.getenv("DEEPSEEK_MODEL", "deepseek-v4-flash"),
+            model=os.getenv("MODEL_NAME", "deepseek-v4-flash"),
             messages=messages,
             max_tokens=max_tokens,
             temperature=0.5

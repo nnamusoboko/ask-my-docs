@@ -33,8 +33,8 @@ def main():
     chunks = chunk_text(text, chunk_size, overlap)
 
     client = OpenAI(
-        base_url="https://api.deepseek.com",
-        api_key=os.getenv("DEEPSEEK_API_KEY")
+        base_url=os.getenv("MODEL_PROVIDER_BASE_URL"),
+        api_key=os.getenv("MODEL_PROVIDER_API_KEY")
     )
 
     for question in load_questions():
