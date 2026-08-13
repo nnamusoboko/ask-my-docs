@@ -28,10 +28,9 @@ specific set of documents, instead of the model's general knowledge.
 
    Fill in:
 
-   - `DEEPSEEK_API_KEY` — your provider's API key
-   - `DEEPSEEK_MODEL` — the model ID to use (e.g. `deepseek-chat`)
-   - `DEEPSEEK_BASE_URL` — your provider's OpenAI-compatible endpoint.
-     Leave as-is for DeepSeek; for OpenRouter use [OpenRouter](https://openrouter.ai/api/v1).
+   - `MODEL_PROVIDER_API_KEY` — your provider's API key
+   - `MODEL_NAME` — the model ID to use (e.g. `deepseek-v4-flash`)
+   - `MODEL_PROVIDER_BASE_URL` — your provider's OpenAI-compatible endpoint.
 
 ## Usage
 
