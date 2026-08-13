@@ -43,7 +43,9 @@ def main():
         context_preview = context[:50] + "..." if context else "No context available."
         context_index = chunks.index(context) if context and  context in chunks else -1
 
-        print(f"\n\n[question]: \n{question}\n[Best chunk]:\n{context_preview}\n[chunk index]: #{context_index}\n[matched words]: {matched_words}\n[Score]: {score}\n")
+        print(f"\n\n[question]: \n{question}\n[Best chunk]:\n{context_preview}\n")
+        print(f"[chunk index]: #{context_index}\n[matched words]: {matched_words}\n")
+        print(f"[Score]: {score}\n[Model used]: {os.getenv("MODEL_NAME")}\n[Max-tokens-used]: {max_tokens}\n")
 
         if score == 0:
             answer = "No relevant context found for the question."
