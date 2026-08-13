@@ -42,7 +42,7 @@ Options:
 
 - `--chunk-size` — chunk size in characters (default 500)
 - `--overlap`    — overlap between chunks in characters (default 50)
-- `--max-tokens` — maximum output tokens per answer (default 300)
+- `--max-tokens` — maximum output tokens per answer (default 1000)
 
 The script splits the document into overlapping chunks, finds the chunk most
 relevant to each question using keyword matching, and answers using only that
