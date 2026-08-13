@@ -53,4 +53,6 @@ model call.
 
 - `ingest.py` — reads a text file and splits it into overlapping chunks
 - `experiment.py` — asks questions about a document via an OpenAI-compatible API
+- `llm.py` — forwards query to llm provider
+- `retrieval.py` — finds chunks relevant to query
   
