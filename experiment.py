@@ -2,7 +2,7 @@ import os
 import argparse
 from dotenv import load_dotenv
 from openai import OpenAI
-from ingest import load_text, chunk_text
+from ingest import load_text, chunk_text, chunk_by_structure
 from retrieval import find_relevant_chunk
 from llm import ask_model
 
@@ -21,6 +21,8 @@ def main():
     parser.add_argument("--overlap", type=int, default=50, help="overlap for chunks")
     parser.add_argument("--chunk-size", type=int, default=500, help="window size")
     parser.add_argument("--max-tokens", type=int, default=1000, help="maximum number of output tokens")
+    parser.add_argument("--chunker", type=str, choices=["fixed-size", "structured"], help="type of chunker to use")  
+    
     
     args = parser.parse_args()
 
@@ -28,9 +30,16 @@ def main():
     overlap = args.overlap
     chunk_size = args.chunk_size
     max_tokens = args.max_tokens
+    chunker = args.chunker
 
     text = load_text(file)
-    chunks = chunk_text(text, chunk_size, overlap)
+
+    chunks = []
+
+    if chunker == "fixed-size":
+        chunks = chunk_text(text, chunk_size, overlap)
+    elif chunker == "structured":
+        chunks = chunk_by_structure(text)
 
     client = OpenAI(
         base_url=os.getenv("MODEL_PROVIDER_BASE_URL"),
