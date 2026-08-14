@@ -15,6 +15,30 @@ def chunk_text(text: str, chunk_size: int, overlap: int) -> list[str]:
         start += chunk_size - overlap 
     return chunks
 
+    
+def chunk_by_structure(text: str) -> list[str]:
+    # STEP 1: split into lines, find separator lines (=====)
+    # STEP 2: group lines into blocks
+    # STEP 3: drop separators, pair header block with its content
+    
+    lines = text.splitlines()
+    sections = []
+    current = []
+
+    for line in lines:
+        if line.strip() == "=====":
+            if current:
+                sections.append("\n".join(current).strip())
+                current = []
+        else:
+            current.append(line)
+
+    if current:
+        sections.append("\n".join(current).strip())
+
+    return sections
+
+
 def main():
     text = load_text("data/sample.txt")
     chunks = chunk_text(text, chunk_size=4, overlap=2)
