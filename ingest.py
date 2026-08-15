@@ -26,7 +26,8 @@ def chunk_by_structure(text: str) -> list[str]:
     current = []
 
     for line in lines:
-        if line.strip() == "=====":
+        doc_line = line.strip()
+        if doc_line and set(doc_line) == {"="}:
             if current:
                 sections.append("\n".join(current).strip())
                 current = []
