@@ -33,7 +33,18 @@ def chunk_by_structure(text: str) -> list[str]:
     if current:
         sections.append("\n".join(current).strip())
 
-    return sections
+    return glue_short_chunks(sections)
+
+def glue_short_chunks(chunks: list[str], threshold: int = 100) -> list[str]:
+    glued: list[str] = []
+
+    for chunk in chunks:
+        if glued and len(glued[-1]) <= threshold:
+            glued[-1] += "\n" + chunk
+        else:
+            glued.append(chunk)
+
+    return glued
 
 
 def main():
