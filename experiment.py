@@ -16,14 +16,13 @@ def main():
     load_dotenv()
 
     parser = argparse.ArgumentParser(description="Chunking quality experiment")
-    
+
     parser.add_argument("file", type=str, help="File with content to chunk")
     parser.add_argument("--overlap", type=int, default=50, help="overlap for chunks")
     parser.add_argument("--chunk-size", type=int, default=500, help="window size")
     parser.add_argument("--max-tokens", type=int, default=1000, help="maximum number of output tokens")
-    parser.add_argument("--chunker", type=str, choices=["fixed-size", "structured"], help="type of chunker to use")  
-    
-    
+    parser.add_argument("--chunker", type=str, choices=["fixed-size", "structured"], help="type of chunker to use")
+
     args = parser.parse_args()
 
     file = args.file
@@ -54,7 +53,8 @@ def main():
 
         print(f"\n\n[question]: \n{question}\n[Best chunk]:\n{context_preview}\n")
         print(f"[chunk index]: #{context_index}\n[matched words]: {matched_words}\n")
-        print(f"[Score]: {score}\n[Model used]: {os.getenv("MODEL_NAME")}\n[Max-tokens-used]: {max_tokens}\n")
+        print(f"[Score]: {score}\n[Model used]: {os.getenv("MODEL_NAME")}\n[Max-tokens-used]: {max_tokens}")
+        print(f"[chunk-length]: {len(context)}\n")
 
         if score == 0:
             answer = "No relevant context found for the question."
