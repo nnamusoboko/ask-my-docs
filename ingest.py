@@ -8,19 +8,15 @@ def chunk_text(text: str, chunk_size: int, overlap: int) -> list[str]:
     text_len = len(text);
     chunks = []
     start = 0
-    while start < text_len: 
+    while start < text_len:
         end = min(start + chunk_size, text_len)
         chunk = text[start:end]
         chunks.append(chunk)
-        start += chunk_size - overlap 
+        start += chunk_size - overlap
     return chunks
 
-    
+
 def chunk_by_structure(text: str) -> list[str]:
-    # STEP 1: split into lines, find separator lines (=====)
-    # STEP 2: group lines into blocks
-    # STEP 3: drop separators, pair header block with its content
-    
     lines = text.splitlines()
     sections = []
     current = []
