@@ -16,7 +16,7 @@ def chunk_text(text: str, chunk_size: int, overlap: int) -> list[str]:
     return chunks
 
 
-def chunk_by_structure(text: str) -> list[str]:
+def chunk_by_structure(text: str, max_size: int = 500) -> list[str]:
     lines = text.splitlines()
     sections = []
     current = []
@@ -33,7 +33,10 @@ def chunk_by_structure(text: str) -> list[str]:
     if current:
         sections.append("\n".join(current).strip())
 
-    return glue_short_chunks(sections)
+    glued_chunks = glue_short_chunks(sections)
+    final_chunks = sub_split_chunks(glued_chunks, max_size)
+
+    return final_chunks
 
 def glue_short_chunks(chunks: list[str], threshold: int = 100) -> list[str]:
     glued: list[str] = []
@@ -45,6 +48,24 @@ def glue_short_chunks(chunks: list[str], threshold: int = 100) -> list[str]:
             glued.append(chunk)
 
     return glued
+
+
+def sub_split_chunks(chunks: list[str], max_size: int) -> list[str]:
+    pieces: list[str] = []
+
+    for chunk in chunks:
+        chunk_len = len(chunk)
+        if chunk_len <= max_size:
+            pieces.append(chunk)
+        else:
+            start = 0
+            while start < chunk_len:
+                end = min(start + max_size, chunk_len)
+                sub_chunk = chunk[start:end]
+                pieces.append(sub_chunk)
+                start += max_size
+
+    return pieces
 
 
 def main():

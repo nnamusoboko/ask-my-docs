@@ -38,7 +38,7 @@ def main():
     if chunker == "fixed-size":
         chunks = chunk_text(text, chunk_size, overlap)
     elif chunker == "structured":
-        chunks = chunk_by_structure(text)
+        chunks = chunk_by_structure(text, chunk_size)
 
     client = OpenAI(
         base_url=os.getenv("MODEL_PROVIDER_BASE_URL"),
