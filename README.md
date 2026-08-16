@@ -36,7 +36,7 @@ specific set of documents, instead of the model's general knowledge.
 
 Put a text document in `data/`, then ask questions about it:
 
-`python experiment.py data/sample.txt --chunk-size 500 --overlap 50`
+`python main.py data/sample.txt --chunk-size 500 --overlap 50`
 
 Options:
 
