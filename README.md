@@ -51,7 +51,8 @@ model call.
 
 ## Files
 
-- `ingest.py` — reads a text file and splits it into overlapping chunks
+- `loader.py` — reads a text file
+- `chunking.py` - splits it into overlapping chunks
 - `main.py` — asks questions about a document via an OpenAI-compatible API
-- `llm.py` — forwards query to llm provider
+- `generation.py` — forwards query to llm provider
 - `retrieval.py` — finds chunks relevant to query
