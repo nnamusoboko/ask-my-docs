@@ -2,9 +2,10 @@ import os
 import argparse
 from dotenv import load_dotenv
 from openai import OpenAI
-from ingest import load_text, chunk_text, chunk_by_structure
+from loader import load_text
+from chunking import chunk_text, chunk_by_structure
 from retrieval import find_relevant_chunk
-from llm import ask_model
+from generation import ask_model
 
 def load_questions() -> list[str]:
     questions = ["whats chunking?", "what is fixed-size chunking?", "what are the drawbacks of fixed-size chunking?"]

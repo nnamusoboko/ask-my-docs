@@ -1,16 +1,16 @@
 from rank_bm25 import BM25Okapi
-from text_utils import clean_words, best_chunk_stats
+from cleaning import clean_words, best_chunk_stats
 
 def find_relevant_chunk(question: str, chunks: list[str]) -> tuple[float, str, dict[str, float]]:
     if not chunks:
         return 0, "", {}
 
     question_word_tokens = clean_words(question)
-    
+
     best_chunk = ""
     best_score = 0
     matched_words = {}
-    
+
     tokenized_chunks = [clean_words(chunk) for chunk in chunks]
 
     bm25 = BM25Okapi(tokenized_chunks)
