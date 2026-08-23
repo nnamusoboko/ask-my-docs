@@ -1,69 +1,50 @@
-import os
-import argparse
-from dotenv import load_dotenv
-from openai import OpenAI
 from loader import load_text
-from chunking import chunk_text, chunk_by_structure
-from retrieval import find_relevant_chunk
+from cleaning import TextCleaner
+from chunking import Chunker
+from tokenizer import tokenize_normalised_text
+from retrieval import Retriever
 from generation import ask_model
+from cli import get_cli_args
+from config import Config
 
-def load_questions() -> list[str]:
-    questions = ["whats chunking?", "what is fixed-size chunking?", "what are the drawbacks of fixed-size chunking?"]
+def main() -> None:
+    args = get_cli_args()
 
-    return questions
-
-
-def main():
-    load_dotenv()
-
-    parser = argparse.ArgumentParser(description="Chunking quality experiment")
-
-    parser.add_argument("file", type=str, help="File with content to chunk")
-    parser.add_argument("--overlap", type=int, default=50, help="overlap for chunks")
-    parser.add_argument("--chunk-size", type=int, default=500, help="window size")
-    parser.add_argument("--max-tokens", type=int, default=1000, help="maximum number of output tokens")
-    parser.add_argument("--chunker", type=str, choices=["fixed-size", "structured"], help="type of chunker to use")
-
-    args = parser.parse_args()
-
-    file = args.file
-    overlap = args.overlap
-    chunk_size = args.chunk_size
-    max_tokens = args.max_tokens
-    chunker = args.chunker
+    file = args["file"]
+    overlap = args["overlap"]
+    max_tokens = args["max_tokens"]
+    chunker = args["chunker"]
+    chunk_size = args["chunk_size"]
+    user_questions = args["questions"]
 
     text = load_text(file)
+    clean_doc_text = TextCleaner.clean_document_text(text)
+    chunks: list[str] = []
 
-    chunks = []
+    if chunker == "structured":
+        chunks = Chunker.chunk_by_structure(clean_doc_text, chunk_size)
+    else:
+        chunks = Chunker.fixed_size_chunking(clean_doc_text, chunk_size, overlap)
 
-    if chunker == "fixed-size":
-        chunks = chunk_text(text, chunk_size, overlap)
-    elif chunker == "structured":
-        chunks = chunk_by_structure(text, chunk_size)
-
-    client = OpenAI(
-        base_url=os.getenv("MODEL_PROVIDER_BASE_URL"),
-        api_key=os.getenv("MODEL_PROVIDER_API_KEY")
+    bm25_search_obj = Retriever.create_search_engine(
+        chunks,
+        normalise_chunk_text=TextCleaner.normalise_chunk_text,
+        tokenize_text=tokenize_normalised_text,
     )
 
-    for question in load_questions():
-        score, context, matched_words = find_relevant_chunk(question, chunks)
+    for question in user_questions:
+        try:
+            clean_question = TextCleaner.normalise_text(question)
+            tokenized_question = tokenize_normalised_text(clean_question)
+            best_chunk = Retriever.find_chunk(tokenized_question, chunks, bm25_search_obj)
+            if not best_chunk:
+                print("Information provided doesn't have relevant context")
+                continue
 
-        context_preview = context[:50] + "..." if context else "No context available."
-        context_index = chunks.index(context) if context and  context in chunks else -1
-
-        print(f"\n\n[question]: \n{question}\n[Best chunk]:\n{context_preview}\n")
-        print(f"[chunk index]: #{context_index}\n[matched words]: {matched_words}\n")
-        print(f"[Score]: {score}\n[Model used]: {os.getenv("MODEL_NAME")}\n[Max-tokens-used]: {max_tokens}")
-        print(f"[chunk-length]: {len(context)}\n")
-
-        if score == 0:
-            answer = "No relevant context found for the question."
-        else:
-            answer = ask_model(question, context, max_tokens, client)
-
-        print(f"[Answer]:\n {answer}\n\n")
-
+            answer = ask_model(question, best_chunk, max_tokens, config=Config())
+            print(f"Response: {answer}")
+        except Exception as e:
+            print(e)
 
 if __name__ == "__main__":
     main()
