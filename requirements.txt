@@ -10,6 +10,7 @@ jiter==0.16.0
 numpy==2.5.2
 openai==2.53.0
 pydantic==2.13.4
+pydantic-settings==2.15.0
 pydantic_core==2.46.4
 python-dotenv==1.2.2
 rank-bm25==0.2.2
