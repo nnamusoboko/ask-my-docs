@@ -17,7 +17,7 @@ specific set of documents, instead of the model's general knowledge.
 2. Install the dependencies:
 
    ```bash
-   pip install openai python-dotenv
+   pip install -r requirements.txt
    ```
 
 3. Get an API key from any provider with an OpenAI-compatible API, for example [DeepSeek](https://platform.deepseek.com/api_keys) or [OpenRouter](https://openrouter.ai/workspaces/default/keys). Free-tier models work too, though quality varies.
@@ -43,8 +43,9 @@ Options:
 - `--chunk-size` — chunk size in characters (default 500)
 - `--overlap`    — overlap between chunks in characters for fixed-size chunker (default 50)
 - `--max-tokens` — maximum output tokens per answer (default 1000)
+- `--questions`  — pass queries to ask about the document
 
-The script splits the document into overlapping chunks, finds the chunk most
+The script splits the document into chunks, finds the chunk most
 relevant to each question using keyword matching, and answers using only that
 chunk's text. Questions with no matching chunk are answered locally without a
 model call.
@@ -52,7 +53,10 @@ model call.
 ## Files
 
 - `loader.py` — reads a text file
-- `chunking.py` - splits it into overlapping chunks
+- `chunking.py` - splits text into chunks
 - `main.py` — asks questions about a document via an OpenAI-compatible API
 - `generation.py` — forwards query to llm provider
 - `retrieval.py` — finds chunks relevant to query
+- `cleaning.py` — normalises text and chunk text
+- `config.py` — configures model provider
+- `tokenizer.py` — tokenizes text for model input
