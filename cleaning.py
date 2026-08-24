@@ -1,10 +1,7 @@
 import re
 import string
 
-import constants
-
 PUNCT_TABLE = str.maketrans("", "", string.punctuation)
-STOP_WORDS = constants.STOP_WORDS
 
 
 class TextCleaner:
@@ -23,12 +20,9 @@ class TextCleaner:
 
     @staticmethod
     def normalise_text(text: str) -> str:
-        """Lowercases text, removes stop words and strips all punctuation symbols"""
+        """Lowercases text and strips all punctuation symbols"""
         if not text:
             return ""
-
-        none_stopwords = [word for word in text.split() if word not in STOP_WORDS]
-        text = " ".join(none_stopwords)
 
         return text.lower().translate(PUNCT_TABLE)
 
