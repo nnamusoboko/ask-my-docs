@@ -19,6 +19,8 @@ class TextCleaner:
         text = "".join(ch for ch in text if ch == "\n" or ord(ch) >= 32)
         text = re.sub(r"(?<=\S) {2,}(?=\S)", " ", text)
 
+        logger.info("Cleaned document (len: %d)", len(text))
+
         return text
 
 

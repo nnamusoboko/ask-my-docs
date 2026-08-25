@@ -14,6 +14,9 @@ def ask_model(question: str, context: str, max_tokens: int, config: Config) -> s
             {"role": "user", "content": f"Context: {context}\n\nQuestion: {question}"
         }
     ]
+
+    logger.info("Asking model (max %d tokens)", max_tokens)
+
     try:
         response = client.chat.completions.create(
             model=config.model_name,
@@ -21,6 +24,7 @@ def ask_model(question: str, context: str, max_tokens: int, config: Config) -> s
             max_tokens=max_tokens,
             temperature=0.5
         )
+
 
         answer = response.choices[0].message.content
         if answer is None:

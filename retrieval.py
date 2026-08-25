@@ -37,6 +37,9 @@ class Retriever:
             return None
 
         best_chunk_index = int(scores.argmax())
+
+        logger.info("Query matched chunk #%d", best_chunk_index)
+
         return chunks[best_chunk_index]
 
     @staticmethod

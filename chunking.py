@@ -17,6 +17,9 @@ class Chunker:
             chunk = text[start:end]
             chunks.append(chunk)
             start += chunk_size - overlap
+
+        logger.info("Chunking by fixed size: %d chunks", len(chunks))
+
         return chunks
 
     @staticmethod
@@ -39,6 +42,8 @@ class Chunker:
 
         glued_chunks = Chunker._glue_short_chunks(sections)
         final_chunks = Chunker._sub_split_chunks(glued_chunks, max_size)
+
+        logger.info("Chunking by structure: %d sections", len(sections))
 
         return final_chunks
 
