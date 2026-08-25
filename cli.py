@@ -1,5 +1,8 @@
 import argparse
 from typing import TypedDict
+import logging
+
+logger = logging.getLogger(__name__)
 
 class CliArgs(TypedDict):
     file: str

@@ -1,4 +1,7 @@
+import logging
 import constants
+
+logger = logging.getLogger(__name__)
 
 class Chunker:
 

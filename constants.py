@@ -1,3 +1,7 @@
+import logging
+
+logger = logging.getLogger(__name__)
+
 MAX_SUB_SPLIT_SIZE = 500
 CHUNK_OVERLAP = 100
 CHUNK_SIZE = 500

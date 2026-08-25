@@ -1,6 +1,10 @@
+import logging
 from openai import OpenAI
 from openai.types.chat import ChatCompletionMessageParam
 from config import Config
+
+logger = logging.getLogger(__name__)
+
 
 def ask_model(question: str, context: str, max_tokens: int, config: Config) -> str:
     client = create_client(config.model_provider_base_url, config.model_provider_api_key)

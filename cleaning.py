@@ -1,5 +1,9 @@
+import logging
 import re
 import string
+
+
+logger = logging.getLogger(__name__)
 
 PUNCT_TABLE = str.maketrans("", "", string.punctuation)
 
