@@ -1,5 +1,4 @@
-import logging
-
+from logger_config import setup_logging
 from loader import load_text
 from cleaning import TextCleaner
 from chunking import Chunker
@@ -9,12 +8,7 @@ from generation import ask_model
 from cli import get_cli_args
 from config import Config
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s %(levelname)s %(name)s: %(message)s"
-)
-
-logging.getLogger("httpx").setLevel(logging.WARNING)
+setup_logging()
 
 def main() -> None:
     args = get_cli_args()
