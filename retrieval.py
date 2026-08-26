@@ -21,6 +21,9 @@ class Retriever:
         """BM25 mathematical index."""
         normalised_chunks = normalise_chunk_text(chunks)
         tokenized_chunks = [tokenize_text(chunk) for chunk in normalised_chunks]
+
+        logger.info("Created search index with %d chunks", len(tokenized_chunks))
+
         return BM25Okapi(tokenized_chunks)
 
 

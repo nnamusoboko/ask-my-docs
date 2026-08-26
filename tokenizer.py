@@ -16,6 +16,4 @@ def tokenize_normalised_text(normalized_text: str) -> list[str]:
     # tokenize and remove stopwords
     tokenized_string = [word for word in normalized_text.split() if word not in _STOPWORDS]
 
-    logger.info("Tokenized %d words", len(tokenized_string))
-
     return tokenized_string

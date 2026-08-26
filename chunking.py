@@ -43,7 +43,7 @@ class Chunker:
         glued_chunks = Chunker._glue_short_chunks(sections)
         final_chunks = Chunker._sub_split_chunks(glued_chunks, max_size)
 
-        logger.info("Chunking by structure: %d sections", len(sections))
+        logger.info("Chunking by structure: (%d chunks) (%d sections)", len(final_chunks), len(sections))
 
         return final_chunks
 
