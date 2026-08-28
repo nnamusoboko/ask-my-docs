@@ -4,11 +4,12 @@ from pathlib import Path
 logger = logging.getLogger(__name__)
 
 
-def load_text(path: str) -> str:
+def load_text(path: str) -> tuple[str, str]:
     file_path = Path(path)
     try:
         with open(file_path, "r", encoding="utf-8") as f:
-            return f.read()
+            filename = path.split("/")[-1]
+            return f.read(), filename
     except FileNotFoundError:
         logger.exception("Failed to read file at %s", file_path)
         raise

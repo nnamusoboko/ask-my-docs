@@ -1,6 +1,7 @@
 import logging
 import re
 import string
+from models import Chunk
 
 
 logger = logging.getLogger(__name__)
@@ -33,8 +34,14 @@ class TextCleaner:
         return text.lower().translate(PUNCT_TABLE)
 
     @staticmethod
-    def normalise_chunk_text(chunks: list[str]) -> list[str]:
+    def normalise_chunk_text(chunks: list[Chunk]) -> list[Chunk]:
         if not chunks:
             return []
 
-        return [TextCleaner.normalise_text(chunk) for chunk in chunks]
+        return [
+            Chunk(
+                content=TextCleaner.normalise_text(chunk.content),
+                metadata=chunk.metadata
+            )
+            for chunk in chunks
+        ]

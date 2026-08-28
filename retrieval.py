@@ -1,6 +1,8 @@
 import logging
 from typing import Callable
 from rank_bm25 import BM25Okapi
+from models import Chunk
+
 
 logger = logging.getLogger(__name__)
 
@@ -14,13 +16,13 @@ class Retriever:
 
     @staticmethod
     def create_search_engine(
-        chunks: list[str],
-        normalise_chunk_text: Callable[[list[str]], list[str]],
+        chunks: list[Chunk],
+        normalise_chunk_text: Callable[[list[Chunk]], list[Chunk]],
         tokenize_text: Callable[[str], list[str]],
     ) -> BM25Okapi:
         """BM25 mathematical index."""
         normalised_chunks = normalise_chunk_text(chunks)
-        tokenized_chunks = [tokenize_text(chunk) for chunk in normalised_chunks]
+        tokenized_chunks = [tokenize_text(chunk.content) for chunk in normalised_chunks]
 
         logger.info("Created search index with %d chunks", len(tokenized_chunks))
 
@@ -28,7 +30,7 @@ class Retriever:
 
 
     @staticmethod
-    def find_chunk(tokenized_user_query: list[str], chunks: list[str], bm25: BM25Okapi) -> str | None:
+    def find_chunk(tokenized_user_query: list[str], chunks: list[Chunk], bm25: BM25Okapi) -> Chunk | None:
         if not chunks:
             raise ValueError("Cannot calculate stats because the chunks list is empty")
 

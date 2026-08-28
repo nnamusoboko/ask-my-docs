@@ -1,29 +1,39 @@
 import logging
+
+from numpy import index_exp
 import constants
+from models import Chunk
+
 
 logger = logging.getLogger(__name__)
 
 class Chunker:
 
     @staticmethod
-    def fixed_size_chunking(text: str, chunk_size: int = constants.CHUNK_SIZE, overlap: int = constants.CHUNK_OVERLAP) -> list[str]:
+    def fixed_size_chunking(
+        text: str, chunk_size: int = constants.CHUNK_SIZE,
+        overlap: int = constants.CHUNK_OVERLAP
+    ) -> list[Chunk]:
+
         if overlap >= chunk_size:
             raise ValueError(f"Overlap {overlap} cant be greater or equal to {chunk_size}")
-        text_len = len(text);
-        chunks: list[str] = []
+        text_len = len(text)
+        chunks: list[Chunk] = []
         start = 0
+        chunk_index = 0
         while start < text_len:
             end = min(start + chunk_size, text_len)
             chunk = text[start:end]
-            chunks.append(chunk)
+            chunks.append(Chunk(content=chunk, metadata={"index": chunk_index}))
             start += chunk_size - overlap
+            chunk_index += 1
 
         logger.info("Chunking by fixed size: %d chunks", len(chunks))
 
         return chunks
 
     @staticmethod
-    def chunk_by_structure(text: str, max_size: int = constants.MAX_SUB_SPLIT_SIZE) -> list[str]:
+    def chunk_by_structure(text: str, max_size: int = constants.MAX_SUB_SPLIT_SIZE) -> list[Chunk]:
         lines = text.splitlines()
         sections: list[str] = []
         current: list[str] = []
@@ -43,9 +53,14 @@ class Chunker:
         glued_chunks = Chunker._glue_short_chunks(sections)
         final_chunks = Chunker._sub_split_chunks(glued_chunks, max_size)
 
-        logger.info("Chunking by structure: (%d chunks) (%d sections)", len(final_chunks), len(sections))
+        chunks = [
+            Chunk(content=chunk, metadata={"index": index})
+            for index, chunk in enumerate(final_chunks)
+        ]
 
-        return final_chunks
+        logger.info("Chunking by structure: (%d chunks) (%d sections)", len(chunks), len(sections))
+
+        return chunks
 
     @staticmethod
     def _glue_short_chunks(sections: list[str], threshold: int = constants.THRESHOLD) -> list[str]:
